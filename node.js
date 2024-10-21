@@ -8,7 +8,7 @@ var BrowserslistError = require('./error')
 var IS_SECTION = /^\s*\[(.+)]\s*$/
 var CONFIG_PATTERN = /^browserslist-config-/
 var SCOPED_CONFIG__PATTERN = /@[^/]+(?:\/[^/]+)?\/browserslist-config(?:-|$|\/)/
-var TIME_TO_UPDATE_CANIUSE = 6 * 30 * 24 * 60 * 60 * 1000
+var HALF_YEAR = 6
 var FORMAT =
   'Browserslist config should be a string or an array ' +
   'of strings with browser queries'
@@ -416,11 +416,12 @@ module.exports = {
     if (process.env.BROWSERSLIST_IGNORE_OLD_DATA) return
 
     var latest = latestReleaseTime(agentsObj)
-    var halfYearAgo = Date.now() - TIME_TO_UPDATE_CANIUSE
-
-    if (latest !== 0 && latest < halfYearAgo) {
+    var elapsedMonths = Math.round((Date.now() - latest) / 30 / 24 / 60 / 60 / 1000)
+    var halfYear = elapsedMonths >= HALF_YEAR
+    if (latest !== 0 && halfYear) {
+      elapsedMonths = elapsedMonths === 1 ? elapsedMonths + ' month ' : elapsedMonths + ' months '
       console.warn(
-        'Browserslist: caniuse-lite is outdated. Please run:\n' +
+        'Browserslist: caniuse-lite is ' + elapsedMonths + 'old. Please run:\n' +
           '  npx update-browserslist-db@latest\n' +
           '  Why you should do it regularly: ' +
           'https://github.com/browserslist/update-db#readme'
